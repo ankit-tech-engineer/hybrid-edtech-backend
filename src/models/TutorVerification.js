@@ -14,7 +14,6 @@ const tutorVerificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-tutorVerificationSchema.index({ user_id: 1 }, { unique: true });
 tutorVerificationSchema.index({ status: 1 });
 
 module.exports = mongoose.model('TutorVerification', tutorVerificationSchema);

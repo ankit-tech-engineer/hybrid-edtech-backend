@@ -13,6 +13,5 @@ const reviewSchema = new mongoose.Schema(
 
 reviewSchema.index({ student_id: 1 });
 reviewSchema.index({ tutor_id: 1 });
-reviewSchema.index({ booking_id: 1 }, { unique: true });
 
 module.exports = mongoose.model('Review', reviewSchema);
