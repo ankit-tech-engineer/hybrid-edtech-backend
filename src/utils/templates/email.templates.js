@@ -202,6 +202,78 @@ const contactAutoReply = ({ senderName }) => ({
     </div>`),
 });
 
+// ─── Payment: Success (to Student) ───────────────────────────────────────────
+const paymentSuccess = ({ studentName, tutorName, amount, currency, paymentId, bookingDate, mode }) => ({
+  subject: '✅ Payment Successful — Hybrid EdTech',
+  html: layout(`
+    <div class="body">
+      <h2>Payment Successful! ✅</h2>
+      <p>Hi <strong>${studentName}</strong>, your payment has been processed successfully.</p>
+      <div class="info-card">
+        <div class="row"><span class="label">Tutor</span><span class="value">${tutorName}</span></div>
+        <div class="row"><span class="label">Amount Paid</span><span class="value">₹${amount} ${currency}</span></div>
+        <div class="row"><span class="label">Payment ID</span><span class="value">${paymentId}</span></div>
+        <div class="row"><span class="label">Booking Date</span><span class="value">${new Date(bookingDate).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' })}</span></div>
+        <div class="row"><span class="label">Mode</span><span class="value">${mode}</span></div>
+        <div class="row"><span class="label">Status</span><span class="value"><span class="badge badge-accepted">CONFIRMED</span></span></div>
+      </div>
+      <p>Your booking is now confirmed. Be ready at the scheduled time! 🚀</p>
+      <div class="warning">💡 Keep this payment ID for your records.</div>
+    </div>`),
+});
+
+// ─── Payment: Booking Confirmed (to Tutor) ───────────────────────────────────
+const bookingConfirmed = ({ tutorName, studentName, amount, currency, bookingDate, mode }) => ({
+  subject: '💰 Booking Confirmed with Payment — Hybrid EdTech',
+  html: layout(`
+    <div class="body">
+      <h2>Booking Confirmed! 💰</h2>
+      <p>Hi <strong>${tutorName}</strong>, <strong>${studentName}</strong> has completed the payment for their booking.</p>
+      <div class="info-card">
+        <div class="row"><span class="label">Student</span><span class="value">${studentName}</span></div>
+        <div class="row"><span class="label">Your Earnings</span><span class="value">₹${amount} ${currency}</span></div>
+        <div class="row"><span class="label">Booking Date</span><span class="value">${new Date(bookingDate).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' })}</span></div>
+        <div class="row"><span class="label">Mode</span><span class="value">${mode}</span></div>
+        <div class="row"><span class="label">Status</span><span class="value"><span class="badge badge-accepted">CONFIRMED</span></span></div>
+      </div>
+      <p>Please be prepared for the session at the scheduled time. Good luck! 🌟</p>
+    </div>`),
+});
+
+// ─── Payment: Failed (to Student) ────────────────────────────────────────────
+const paymentFailed = ({ studentName, amount, currency, reason }) => ({
+  subject: '❌ Payment Failed — Hybrid EdTech',
+  html: layout(`
+    <div class="body">
+      <h2>Payment Failed ❌</h2>
+      <p>Hi <strong>${studentName}</strong>, unfortunately your payment could not be processed.</p>
+      <div class="info-card">
+        <div class="row"><span class="label">Amount</span><span class="value">₹${amount} ${currency}</span></div>
+        <div class="row"><span class="label">Reason</span><span class="value">${reason || 'Payment processing error'}</span></div>
+        <div class="row"><span class="label">Status</span><span class="value"><span class="badge badge-rejected">FAILED</span></span></div>
+      </div>
+      <p>Please try again or contact your bank if the issue persists. Your booking is still pending payment.</p>
+      <div class="warning">⚠️ If amount was deducted from your account, it will be refunded within 5-7 business days.</div>
+    </div>`),
+});
+
+// ─── Payment: Refunded (to Student) ──────────────────────────────────────────
+const paymentRefunded = ({ studentName, amount, currency, refundId }) => ({
+  subject: '💸 Refund Processed — Hybrid EdTech',
+  html: layout(`
+    <div class="body">
+      <h2>Refund Processed 💸</h2>
+      <p>Hi <strong>${studentName}</strong>, your refund has been processed successfully.</p>
+      <div class="info-card">
+        <div class="row"><span class="label">Refund Amount</span><span class="value">₹${amount} ${currency}</span></div>
+        <div class="row"><span class="label">Refund ID</span><span class="value">${refundId}</span></div>
+        <div class="row"><span class="label">Status</span><span class="value"><span class="badge badge-completed">REFUNDED</span></span></div>
+      </div>
+      <p>The refund will be credited to your original payment method within <strong>5-7 business days</strong>.</p>
+      <div class="warning">💡 Keep this refund ID for your records.</div>
+    </div>`),
+});
+
 module.exports = {
   registerOtp,
   loginOtp,
@@ -212,4 +284,8 @@ module.exports = {
   bookingCompleted,
   contactEnquiry,
   contactAutoReply,
+  paymentSuccess,
+  bookingConfirmed,
+  paymentFailed,
+  paymentRefunded,
 };

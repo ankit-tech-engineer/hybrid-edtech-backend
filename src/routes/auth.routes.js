@@ -15,5 +15,7 @@ router.post('/verify-login-otp', validate(v.verifyOtp), ctrl.verifyLoginOtp);
 router.post('/resend-otp', otpRateLimiter, validate(v.resendOtp), ctrl.resendOtp);
 router.get('/me', authenticate, ctrl.me);
 router.patch('/avatar', authenticate, ctrl.updateAvatar);
+router.post('/logout', authenticate, ctrl.logout);
+router.post('/refresh-token', ctrl.refreshToken);
 
 module.exports = router;

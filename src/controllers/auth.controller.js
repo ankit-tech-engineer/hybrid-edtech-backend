@@ -68,4 +68,22 @@ const updateAvatar = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, me, updateAvatar };
+const logout = async (req, res, next) => {
+  try {
+    const refreshToken = req.body.refresh_token;
+    const data = await authService.logout(req.user._id, refreshToken);
+    successResponse(res, data, 'Logged out successfully');
+  } catch (err) { next(err); }
+};
+
+const refreshToken = async (req, res, next) => {
+  try {
+    if (!req.body.refresh_token) {
+      return res.status(400).json({ success: false, message: 'Refresh token is required' });
+    }
+    const data = await authService.refreshAccessToken(req.body.refresh_token);
+    successResponse(res, data, 'Access token refreshed');
+  } catch (err) { next(err); }
+};
+
+module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, me, updateAvatar, logout, refreshToken };

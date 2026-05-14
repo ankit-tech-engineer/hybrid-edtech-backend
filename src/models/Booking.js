@@ -31,6 +31,7 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.index({ student_id: 1 });
 bookingSchema.index({ tutor_id: 1 });
 bookingSchema.index({ status: 1 });
+bookingSchema.index({ payment_status: 1 });
 bookingSchema.index({ student_id: 1, status: 1 });
 bookingSchema.index({ tutor_id: 1, status: 1 });
 

@@ -2,8 +2,9 @@ const bcrypt = require('bcryptjs');
 const config = require('../config');
 const userRepo = require('../repositories/user.repository');
 const otpRepo = require('../repositories/otp.repository');
+const refreshTokenRepo = require('../repositories/refreshToken.repository');
 const { generateOTP } = require('../utils/otp');
-const { signToken } = require('../utils/jwt');
+const { signToken, verifyToken } = require('../utils/jwt');
 const AppError = require('../utils/AppError');
 const { OTP_TYPES } = require('../constants');
 const { enqueueEmail } = require('../jobs/email.queue');
@@ -61,8 +62,17 @@ const login = async ({ email, password }) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) throw new AppError('Invalid credentials', 401);
 
-  const token = signToken({ id: user._id, role: user.role });
-  return { token, role: user.role };
+  const accessToken = signToken({ id: user._id, role: user.role });
+  const refreshToken = _generateRefreshToken();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+  await refreshTokenRepo.create({
+    user_id: user._id,
+    token: refreshToken,
+    expires_at: expiresAt,
+  });
+
+  return { accessToken, refreshToken, role: user.role };
 };
 
 const sendLoginOtp = async ({ email }) => {
@@ -90,8 +100,17 @@ const verifyLoginOtp = async ({ email, otp }) => {
 
   await otpRepo.deleteByUserId(user._id, OTP_TYPES.LOGIN);
 
-  const token = signToken({ id: user._id, role: user.role });
-  return { token, role: user.role };
+  const accessToken = signToken({ id: user._id, role: user.role });
+  const refreshToken = _generateRefreshToken();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+  await refreshTokenRepo.create({
+    user_id: user._id,
+    token: refreshToken,
+    expires_at: expiresAt,
+  });
+
+  return { accessToken, refreshToken, role: user.role };
 };
 
 const resendOtp = async ({ email, type }) => {
@@ -111,11 +130,34 @@ const resendOtp = async ({ email, type }) => {
   return { sent: true };
 };
 
+const logout = async (user_id, refreshToken) => {
+  if (refreshToken) {
+    await refreshTokenRepo.revokeByToken(refreshToken);
+  }
+  return { logged_out: true };
+};
+
+const refreshAccessToken = async (refreshToken) => {
+  const record = await refreshTokenRepo.findByToken(refreshToken);
+  if (!record) throw new AppError('Invalid or expired refresh token', 401);
+
+  const user = await userRepo.findById(record.user_id);
+  if (!user) throw new AppError('User not found', 404);
+  if (!user.is_active) throw new AppError('Account not activated', 403);
+
+  const newAccessToken = signToken({ id: user._id, role: user.role });
+  return { accessToken: newAccessToken };
+};
+
 const _createOTP = async (user_id, type) => {
   const otp = generateOTP();
   const expires_at = new Date(Date.now() + config.otpExpiryMinutes * 60 * 1000);
   await otpRepo.create({ user_id, otp, type, expires_at });
   return otp;
+};
+
+const _generateRefreshToken = () => {
+  return require('crypto').randomBytes(32).toString('hex');
 };
 
 const updateAvatar = async (user_id, avatarUrl) => {
@@ -127,4 +169,4 @@ const updateAvatar = async (user_id, avatarUrl) => {
   return user;
 };
 
-module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, updateAvatar };
+module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, logout, refreshAccessToken, updateAvatar };

@@ -32,6 +32,12 @@ const cancel = (id, cancelled_by, cancel_reason) =>
     { new: true }
   ).lean();
 
+const updatePaymentStatus = (id, payment_status, payment_id = null) => {
+  const update = { payment_status };
+  if (payment_id) update.payment_id = payment_id;
+  return Booking.findByIdAndUpdate(id, update, { new: true }).lean();
+};
+
 // Bulk aggregation: completed bookings count per tutor (used by trust score cron)
 const getCompletedCountsByTutor = () =>
   Booking.aggregate([
@@ -39,4 +45,13 @@ const getCompletedCountsByTutor = () =>
     { $group: { _id: '$tutor_id', total_completed: { $sum: 1 } } },
   ]);
 
-module.exports = { create, findByStudent, findByTutor, findById, updateStatus, cancel, getCompletedCountsByTutor };
+module.exports = { 
+  create, 
+  findByStudent, 
+  findByTutor, 
+  findById, 
+  updateStatus, 
+  cancel, 
+  updatePaymentStatus,
+  getCompletedCountsByTutor 
+};
