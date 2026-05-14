@@ -120,7 +120,15 @@ const resendOtp = async ({ email, type }) => {
   await otpRepo.deleteByUserId(user._id, type);
   const otp = await _createOTP(user._id, type);
 
-  const templateType = type === OTP_TYPES.LOGIN ? 'loginOtp' : 'registerOtp';
+  let templateType;
+  if (type === OTP_TYPES.LOGIN) {
+    templateType = 'loginOtp';
+  } else if (type === OTP_TYPES.FORGOT_PASSWORD) {
+    templateType = 'forgotPasswordOtp';
+  } else {
+    templateType = 'registerOtp';
+  }
+
   await enqueueEmail(templateType, email, {
     name: user.name,
     otp,
@@ -128,6 +136,54 @@ const resendOtp = async ({ email, type }) => {
   });
 
   return { sent: true };
+};
+
+const forgotPassword = async ({ email }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw new AppError('User not found', 404);
+  if (!user.is_verified) throw new AppError('Email not verified', 403);
+  if (!user.is_active) throw new AppError('Account not activated', 403);
+
+  // Delete any existing forgot password OTPs
+  await otpRepo.deleteByUserId(user._id, OTP_TYPES.FORGOT_PASSWORD);
+  
+  const otp = await _createOTP(user._id, OTP_TYPES.FORGOT_PASSWORD);
+
+  await enqueueEmail('forgotPasswordOtp', email, {
+    name: user.name,
+    otp,
+    expiryMinutes: config.otpExpiryMinutes,
+  });
+
+  return { sent: true, email: user.email };
+};
+
+const resetPassword = async ({ email, otp, new_password }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw new AppError('User not found', 404);
+
+  // Verify OTP
+  const record = await otpRepo.findValid(user._id, otp, OTP_TYPES.FORGOT_PASSWORD);
+  if (!record) throw new AppError('Invalid or expired OTP', 400);
+
+  // Hash new password
+  const hashed = await bcrypt.hash(new_password, config.bcryptRounds);
+  
+  // Update password
+  await userRepo.updateById(user._id, { password: hashed });
+
+  // Delete the used OTP
+  await otpRepo.deleteByUserId(user._id, OTP_TYPES.FORGOT_PASSWORD);
+
+  // Revoke all existing refresh tokens for security
+  await refreshTokenRepo.revokeAllByUserId(user._id);
+
+  // Send confirmation email
+  await enqueueEmail('passwordResetSuccess', email, {
+    name: user.name,
+  });
+
+  return { reset: true };
 };
 
 const logout = async (user_id, refreshToken) => {
@@ -169,4 +225,4 @@ const updateAvatar = async (user_id, avatarUrl) => {
   return user;
 };
 
-module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, logout, refreshAccessToken, updateAvatar };
+module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, logout, refreshAccessToken, updateAvatar, forgotPassword, resetPassword };

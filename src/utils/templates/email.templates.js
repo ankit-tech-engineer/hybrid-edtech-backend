@@ -274,6 +274,38 @@ const paymentRefunded = ({ studentName, amount, currency, refundId }) => ({
     </div>`),
 });
 
+// ─── Forgot Password: OTP ────────────────────────────────────────────────────
+const forgotPasswordOtp = ({ name, otp, expiryMinutes }) => ({
+  subject: '🔐 Password Reset OTP — Hybrid EdTech',
+  html: layout(`
+    <div class="body">
+      <h2>Password Reset Request 🔐</h2>
+      <p>Hi <strong>${name}</strong>, we received a request to reset your password for your <strong>Hybrid EdTech</strong> account.</p>
+      <p>Use the OTP below to reset your password:</p>
+      <div class="otp-box">
+        <div class="otp">${otp}</div>
+        <div class="expiry">⏱ Expires in ${expiryMinutes} minutes</div>
+      </div>
+      <p>Enter this code on the password reset page to create a new password.</p>
+      <div class="warning">⚠️ If you didn't request this, please ignore this email. Your account is safe.</div>
+      <div class="warning">🔒 Never share this OTP with anyone. Our team will never ask for it.</div>
+    </div>`),
+});
+
+// ─── Password Reset: Success ─────────────────────────────────────────────────
+const passwordResetSuccess = ({ name }) => ({
+  subject: '✅ Password Reset Successful — Hybrid EdTech',
+  html: layout(`
+    <div class="body">
+      <h2>Password Reset Successful! ✅</h2>
+      <p>Hi <strong>${name}</strong>, your password has been successfully reset.</p>
+      <p>You can now log in to your <strong>Hybrid EdTech</strong> account using your new password.</p>
+      <hr class="divider"/>
+      <p><strong>Security Note:</strong> For your security, all active sessions have been logged out. You'll need to log in again with your new password.</p>
+      <div class="warning">⚠️ If you didn't make this change, please contact our support team immediately.</div>
+    </div>`),
+});
+
 module.exports = {
   registerOtp,
   loginOtp,
@@ -288,4 +320,6 @@ module.exports = {
   bookingConfirmed,
   paymentFailed,
   paymentRefunded,
+  forgotPasswordOtp,
+  passwordResetSuccess,
 };

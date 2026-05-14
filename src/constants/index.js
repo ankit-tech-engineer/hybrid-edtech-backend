@@ -7,6 +7,7 @@ const ROLES = {
 const OTP_TYPES = {
   REGISTER: 'REGISTER',
   LOGIN: 'LOGIN',
+  FORGOT_PASSWORD: 'FORGOT_PASSWORD',
 };
 
 const TUTOR_MODES = {

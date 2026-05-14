@@ -11,7 +11,7 @@ const register = Joi.object({
 const verifyOtp = Joi.object({
   email: Joi.string().email().required(),
   otp: Joi.string().length(6).required(),
-  type: Joi.string().valid('REGISTER', 'LOGIN').required(),
+  type: Joi.string().valid('REGISTER', 'LOGIN', 'FORGOT_PASSWORD').required(),
 });
 
 const setPassword = Joi.object({
@@ -30,7 +30,21 @@ const sendLoginOtp = Joi.object({
 
 const resendOtp = Joi.object({
   email: Joi.string().email().required(),
-  type: Joi.string().valid('REGISTER', 'LOGIN').required(),
+  type: Joi.string().valid('REGISTER', 'LOGIN', 'FORGOT_PASSWORD').required(),
 });
 
-module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, resendOtp };
+const forgotPassword = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+const resetPassword = Joi.object({
+  email: Joi.string().email().required(),
+  otp: Joi.string().length(6).required(),
+  new_password: Joi.string().min(8).required()
+    .messages({
+      'string.min': 'Password must be at least 8 characters long',
+      'any.required': 'New password is required',
+    }),
+});
+
+module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, resendOtp, forgotPassword, resetPassword };

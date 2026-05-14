@@ -13,9 +13,9 @@ const upsertProfile = async (user_id, data) => {
 };
 
 const getMyProfile = async (user_id) => {
-  console.log(">>>>>>>>>>>>>>>>>>",user_id)
   const profile = await tutorRepo.findByUserId(user_id);
-  if (!profile) throw new AppError('Profile not found', 404);
+  // Return null if profile doesn't exist (tutor hasn't created profile yet)
+  // Frontend can handle this by showing "Create Profile" form
   return profile;
 };
 

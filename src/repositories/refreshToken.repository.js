@@ -14,6 +14,9 @@ const revokeByToken = (token) =>
 const revokeByUserId = (user_id) =>
   RefreshToken.updateMany({ user_id }, { is_revoked: true });
 
+const revokeAllByUserId = (user_id) =>
+  RefreshToken.updateMany({ user_id }, { is_revoked: true });
+
 const deleteByToken = (token) =>
   RefreshToken.findOneAndDelete({ token }).lean();
 
@@ -26,6 +29,7 @@ module.exports = {
   findByUserId,
   revokeByToken,
   revokeByUserId,
+  revokeAllByUserId,
   deleteByToken,
   deleteByUserId,
 };

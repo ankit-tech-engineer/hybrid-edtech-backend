@@ -12,7 +12,10 @@ const upsertProfile = async (req, res, next) => {
 const getMyProfile = async (req, res, next) => {
   try {
     const profile = await tutorService.getMyProfile(req.user._id);
-    successResponse(res, profile);
+    if (!profile) {
+      return successResponse(res, null, 'Profile not created yet. Please create your profile.');
+    }
+    successResponse(res, profile, 'Profile retrieved successfully');
   } catch (err) { next(err); }
 };
 

@@ -86,4 +86,18 @@ const refreshToken = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, me, updateAvatar, logout, refreshToken };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const data = await authService.forgotPassword(req.body);
+    successResponse(res, data, 'Password reset OTP sent to your email');
+  } catch (err) { next(err); }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const data = await authService.resetPassword(req.body);
+    successResponse(res, data, 'Password reset successfully. Please login with your new password.');
+  } catch (err) { next(err); }
+};
+
+module.exports = { register, verifyOtp, setPassword, login, sendLoginOtp, verifyLoginOtp, resendOtp, me, updateAvatar, logout, refreshToken, forgotPassword, resetPassword };

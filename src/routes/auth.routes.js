@@ -13,6 +13,8 @@ router.post('/login', validate(v.login), ctrl.login);
 router.post('/send-login-otp', otpRateLimiter, validate(v.sendLoginOtp), ctrl.sendLoginOtp);
 router.post('/verify-login-otp', validate(v.verifyOtp), ctrl.verifyLoginOtp);
 router.post('/resend-otp', otpRateLimiter, validate(v.resendOtp), ctrl.resendOtp);
+router.post('/forgot-password', otpRateLimiter, validate(v.forgotPassword), ctrl.forgotPassword);
+router.post('/reset-password', validate(v.resetPassword), ctrl.resetPassword);
 router.get('/me', authenticate, ctrl.me);
 router.patch('/avatar', authenticate, ctrl.updateAvatar);
 router.post('/logout', authenticate, ctrl.logout);
