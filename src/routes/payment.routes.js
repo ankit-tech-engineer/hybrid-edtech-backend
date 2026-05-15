@@ -15,7 +15,7 @@ const {
 router.post(
   '/create-order',
   authenticate,
-  authorize([ROLES.STUDENT]),
+  authorize(ROLES.STUDENT),
   validate(createOrderSchema),
   paymentController.createOrder
 );
@@ -23,7 +23,7 @@ router.post(
 router.post(
   '/verify',
   authenticate,
-  authorize([ROLES.STUDENT]),
+  authorize(ROLES.STUDENT),
   validate(verifyPaymentSchema),
   paymentController.verifyPayment
 );
@@ -42,7 +42,7 @@ router.get(
 router.get(
   '/student/history',
   authenticate,
-  authorize([ROLES.STUDENT]),
+  authorize(ROLES.STUDENT),
   validate(paginationSchema, 'query'),
   paymentController.getStudentPaymentHistory
 );
@@ -50,7 +50,7 @@ router.get(
 router.get(
   '/tutor/history',
   authenticate,
-  authorize([ROLES.TUTOR]),
+  authorize(ROLES.TUTOR),
   validate(paginationSchema, 'query'),
   paymentController.getTutorPaymentHistory
 );

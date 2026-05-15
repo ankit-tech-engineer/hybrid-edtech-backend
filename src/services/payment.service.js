@@ -9,16 +9,37 @@ const { BOOKING_STATUS, PAYMENT_STATUS, ROLES } = require('../constants');
 const razorpayConfig = require('../config/razorpay');
 const { enqueueEmail } = require('../jobs/email.queue');
 
+// Validate Razorpay configuration
+if (!razorpayConfig.keyId || !razorpayConfig.keySecret) {
+  console.error('❌ Razorpay configuration missing! Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
+  console.error('Current config:', { 
+    keyId: razorpayConfig.keyId ? 'SET' : 'MISSING', 
+    keySecret: razorpayConfig.keySecret ? 'SET' : 'MISSING' 
+  });
+}
+
 // Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: razorpayConfig.keyId,
-  key_secret: razorpayConfig.keySecret,
-});
+let razorpay;
+try {
+  razorpay = new Razorpay({
+    key_id: razorpayConfig.keyId,
+    key_secret: razorpayConfig.keySecret,
+  });
+  console.log('✅ Razorpay initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize Razorpay:', error.message);
+  throw error;
+}
 
 /**
  * Create Razorpay order for a booking
  */
 const createPaymentOrder = async (student_id, booking_id) => {
+  // Check if Razorpay is initialized
+  if (!razorpay) {
+    throw new AppError('Payment gateway not configured. Please contact support.', 500);
+  }
+
   // Fetch booking
   const booking = await bookingRepo.findById(booking_id);
   if (!booking) throw new AppError('Booking not found', 404);
@@ -48,6 +69,7 @@ const createPaymentOrder = async (student_id, booking_id) => {
         booking_id: booking._id,
         tutor_price: existingPayment.tutor_price,
         platform_fee: existingPayment.platform_fee,
+        key_id: razorpayConfig.keyId, // Add key_id for frontend
       };
     }
   }
@@ -64,17 +86,30 @@ const createPaymentOrder = async (student_id, booking_id) => {
   // Fetch student details
   const student = await userRepo.findById(student_id);
 
+  // Generate receipt (max 40 characters for Razorpay)
+  // Format: bk_<last8ofBookingId>_<timestamp>
+  const bookingIdShort = booking_id.toString().slice(-8);
+  const timestamp = Date.now().toString().slice(-8);
+  const receipt = `bk_${bookingIdShort}_${timestamp}`;
+
   // Create Razorpay order
-  const razorpayOrder = await razorpay.orders.create({
-    amount: totalAmountInPaise,
-    currency: 'INR',
-    receipt: `booking_${booking_id}_${Date.now()}`,
-    notes: {
-      booking_id: booking_id.toString(),
-      student_id: student_id.toString(),
-      tutor_id: booking.tutor_id.toString(),
-    },
-  });
+  let razorpayOrder;
+  try {
+    razorpayOrder = await razorpay.orders.create({
+      amount: totalAmountInPaise,
+      currency: 'INR',
+      receipt: receipt,
+      notes: {
+        booking_id: booking_id.toString(),
+        student_id: student_id.toString(),
+        tutor_id: booking.tutor_id.toString(),
+      },
+    });
+  } catch (razorpayError) {
+    console.error('Razorpay order creation failed:', razorpayError);
+    const errorMsg = razorpayError.error?.description || razorpayError.message || 'Unable to create order';
+    throw new AppError(`Payment gateway error: ${errorMsg}`, 500);
+  }
 
   // Save payment record in database
   const payment = await paymentRepo.create({

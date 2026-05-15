@@ -2,7 +2,12 @@ const logger = require('../utils/logger');
 const { errorResponse } = require('../utils/response');
 
 const errorHandler = (err, req, res, next) => {
-  logger.error(err.message, { stack: err.stack, path: req.path });
+  // Log full error details
+  logger.error(err.message || err.toString() || 'Unknown error', { 
+    stack: err.stack, 
+    path: req.path,
+    error: err 
+  });
 
   if (err.isOperational) {
     return errorResponse(res, err.message, err.statusCode);
@@ -17,7 +22,12 @@ const errorHandler = (err, req, res, next) => {
     return errorResponse(res, `${field} already exists`, 409);
   }
 
-  return errorResponse(res, 'Internal server error', 500);
+  // Handle Razorpay errors
+  if (err.error && err.error.description) {
+    return errorResponse(res, `Payment gateway error: ${err.error.description}`, 500);
+  }
+
+  return errorResponse(res, err.message || 'Internal server error', 500);
 };
 
 module.exports = errorHandler;

@@ -13,6 +13,7 @@ const authenticate = async (req, res, next) => {
     const decoded = verifyToken(token);
 
     const user = await userRepository.findById(decoded.id);
+    // console.log("user>>>>>>>>>>>>",user)
     if (!user || !user.is_active || !user.is_verified) {
       return errorResponse(res, 'Unauthorized', 401);
     }
